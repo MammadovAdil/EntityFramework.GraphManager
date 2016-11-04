@@ -87,6 +87,12 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\lib\ExtensionMethods\Ma.ExtensionMethods\Ma.ExtensionMethods.csproj">
+      <Project>{6ccea9d0-96ec-4f38-852e-962212adaf4e}</Project>
+      <Name>Ma.ExtensionMethods</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
