@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{884A5948-D6F0-4F90-8462-3D8C3A1C59DA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Ma.EntityFramework.GraphManager</RootNamespace>
+    <AssemblyName>Ma.EntityFramework.GraphManager</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="EntityFramework.SqlServer, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
+      <HintPath>..\packages\EntityFramework.6.1.3\lib\net45\EntityFramework.SqlServer.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Oracle.ManagedDataAccess.EntityFramework, Version=6.121.2.0, Culture=neutral, PublicKeyToken=89b483f429c47342, processorArchitecture=MSIL" />
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AutoGraphManager\AutoGraphManager.cs" />
+    <Compile Include="AutoGraphManager\Helpers\Abstract\IContextFactory.cs" />
+    <Compile Include="AutoGraphManager\Helpers\Abstract\IContextHelper.cs" />
+    <Compile Include="AutoGraphManager\Helpers\Abstract\IGraphEntityManager.cs" />
+    <Compile Include="AutoGraphManager\Helpers\Abstract\IGraphEntityTypeManager.cs" />
+    <Compile Include="AutoGraphManager\Helpers\ContextHelper.cs" />
+    <Compile Include="AutoGraphManager\Helpers\GraphEntityTypeManager.cs" />
+    <Compile Include="AutoGraphManager\Helpers\GraphEntityManager.cs" />
+    <Compile Include="AutoGraphManager\Abstract\IAutoGraphManager.cs" />
+    <Compile Include="AutoGraphManager\Helpers\HelperStore.cs" />
+    <Compile Include="CustomMappings\IExtendedEntityTypeConfiguration.cs" />
+    <Compile Include="ManualGraphManager\Helpers\Abstract\IEntryHelper.cs" />
+    <Compile Include="ManualGraphManager\Helpers\Abstract\IEntryPropertyHelper.cs" />
+    <Compile Include="ManualGraphManager\Helpers\EntryHelper.cs" />
+    <Compile Include="ManualGraphManager\Helpers\EntryPropertyHelper.cs" />
+    <Compile Include="ManualGraphManager\Abstract\IManualGraphManager.cs" />
+    <Compile Include="ManualGraphManager\ManualGraphManager.cs" />
+    <Compile Include="Models\DefineOrder.cs" />
+    <Compile Include="Models\DependenceInfo.cs" />
+    <Compile Include="Models\FilterType.cs" />
+    <Compile Include="Models\ForeignKeyDetail.cs" />
+    <Compile Include="Models\LinqRuntimeTypeBuilder.cs" />
+    <Compile Include="Models\NavigationDetail.cs" />
+    <Compile Include="Models\RelationshipDetail.cs" />
+    <Compile Include="Models\KeyDetail.cs" />
+    <Compile Include="Models\PropertiesWithSource.cs" />
+    <Compile Include="Models\Utilities.cs" />
+    <Compile Include="CustomMappings\ExtendedEntityTypeConfiguration.cs" />
+    <Compile Include="CustomMappings\MappingHelpers\ExtendedPropertyHelper.cs" />
+    <Compile Include="CustomMappings\MappingHelpers\IMappingHelper.cs" />
+    <Compile Include="DataStorage\MappingStorage.cs" />
+    <Compile Include="Extensions\EFGraphExtensions.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
