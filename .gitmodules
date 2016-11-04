@@ -1,0 +1,3 @@
+[submodule "lib/ExtensionMethods"]
+	path = lib/ExtensionMethods
+	url = git://github.com/MammadovAdil/ExtensionMethods.git
