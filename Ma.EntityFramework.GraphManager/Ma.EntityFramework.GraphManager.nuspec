@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>Ma.EntityFramework.GraphManager</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>MammadovAdil</authors>
+    <owners>MammadovAdil</owners>
+    <licenseUrl>https://github.com/MammadovAdil/EntityFramework.GraphManager/blob/master/License.md</licenseUrl>
+    <projectUrl>https://github.com/MammadovAdil/EntityFramework.GraphManager</projectUrl>
+    <iconUrl>https://cdn1.iconfinder.com/data/icons/database-management-2/100/-_database_hosting_network_server-01-128.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Handle graph of EntityFramework models with ease.</description>
+    <releaseNotes>First realese.</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>EntityFramework Graph CodeFirst GraphManager POCO</tags>
+
+    <dependencies>
+      <dependency id="Ma.ExtensionMethods" version="1.0.0" />
+      <dependency id="EntityFramework" version="6.1.0" />
+    </dependencies>
+  </metadata>
+</package>
