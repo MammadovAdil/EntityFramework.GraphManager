@@ -9,8 +9,11 @@ using Ma.EntityFramework.GraphManager.ManualGraphManager.Abstract;
 using Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers;
 using Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers.Abstract;
 
-namespace Ma.EntityFramework.GraphManager.Extensions
+namespace Ma.EntityFramework.GraphManager
 {
+    /// <summary>
+    /// Graph extension methods.
+    /// </summary>
     public static class EFGraphExtensions
     {
         /// <summary>

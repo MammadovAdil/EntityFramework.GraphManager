@@ -15,10 +15,10 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
     /// ExtendedEntityTypeConfiguration extends EntityTypeConfiguration
     /// and adds additional methods to enhance working with entities.
     /// </summary>
-    /// <typeparam name="T">Type of entity to map.</typeparam>
-    public class ExtendedEntityTypeConfiguration<T>
-        : EntityTypeConfiguration<T>, IExtendedEntityTypeConfiguration<T>
-        where T : class
+    /// <typeparam name="TEntity">Type of entity to map.</typeparam>
+    public class ExtendedEntityTypeConfiguration<TEntity>
+        : EntityTypeConfiguration<TEntity>, IExtendedEntityTypeConfiguration<TEntity>
+        where TEntity : class
     {
         /// <summary>
         /// Mark properties as unique.
@@ -35,7 +35,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
         /// <typeparam name="TProperty">Type of property.</typeparam>
         /// <param name="propertyLambda">Lambda expression to mark properties as unique.</param>
         public void HasUnique<TProperty>(
-            Expression<Func<T, TProperty>> propertyLambda)
+            Expression<Func<TEntity, TProperty>> propertyLambda)
         {
             if (propertyLambda == null)
                 throw new ArgumentNullException("propertyLambda");
@@ -47,7 +47,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                 throw new ArgumentException(string.Format(
                     "Expression '{0}' for '{1}' marks no property to set as unique",
                     propertyLambda.ToString(),
-                    typeof(T).Name));
+                    typeof(TEntity).Name));
 
             // Selects properties which are not appropriate to set as unique
             IEnumerable<PropertyInfo> violatedProperties = markedProperties
@@ -63,11 +63,11 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                     "Expression '{0}' for '{1}' selects inappropriate properties to set unique.\n" +
                     "Only built in value types or enums can be set as unique.",
                     propertyLambda.ToString(),
-                    typeof(T).Name));
+                    typeof(TEntity).Name));
 
             PropertiesWithSource markedAsUnique = new PropertiesWithSource()
             {
-                SourceType = typeof(T),
+                SourceType = typeof(TEntity),
                 Properties = markedProperties
             };
 
@@ -86,7 +86,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                 throw new ArgumentException(string.Format(
                     "Expression '{0}' for '{1}' selects already selected properties to set as unique.",
                     propertyLambda.ToString(),
-                    typeof(T).Name));
+                    typeof(TEntity).Name));
 
             if (!MappingStorage.Instance.UniqueProperties.Contains(markedAsUnique))
                 MappingStorage.Instance.UniqueProperties.Add(markedAsUnique);
@@ -113,7 +113,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
         /// <param name="propertyLambda">Lambda expression to get properties 
         /// state of which must be defined.</param>        
         public void HasStateDefiner<TProperty>(
-            Expression<Func<T, TProperty>> propertyLambda)
+            Expression<Func<TEntity, TProperty>> propertyLambda)
         {
             if (propertyLambda == null)
                 throw new ArgumentNullException("propertyLambda");
@@ -125,7 +125,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                 throw new ArgumentException(string.Format(
                     "Expression '{0}' for '{1}' marks no property to define state of",
                     propertyLambda.ToString(),
-                    typeof(T).Name));
+                    typeof(TEntity).Name));
 
             // Selects properties which are not appropriate to set as to define sate of
             IEnumerable<PropertyInfo> violatedProperties = markedProperties
@@ -149,19 +149,19 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                     "Only properties of user defined class type or collections of those classes" +
                     "can be set to define state of",
                     propertyLambda.ToString(),
-                    typeof(T).Name));
+                    typeof(TEntity).Name));
 
 
             // First look if configuration to define state of properties is set for this TSource
             PropertiesWithSource markedToDefineStateOf = MappingStorage.Instance.StateDefiners
-                .Where(m => m.SourceType.Equals(typeof(T)))
+                .Where(m => m.SourceType.Equals(typeof(TEntity)))
                 .FirstOrDefault();
 
             // If not initialize it
             if (markedToDefineStateOf == null)
                 markedToDefineStateOf = new PropertiesWithSource()
                 {
-                    SourceType = typeof(T)
+                    SourceType = typeof(TEntity)
                 };
 
 
@@ -172,7 +172,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                 throw new ArgumentException(string.Format(
                     "Expression '{0}' for '{1}' selects already selected properties to define state of.",
                     propertyLambda.ToString(),
-                    typeof(T).Name));
+                    typeof(TEntity).Name));
 
             markedToDefineStateOf.Properties.AddRange(markedProperties);
 
@@ -192,8 +192,8 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
         /// <typeparam name="TProperty">Type of property.</typeparam>
         /// <param name="propertyLambda">Lambda expression to get property.</param>
         /// <returns>Extended property helper to be able to work on property.</returns>
-        public ExtendedPropertyHelper<T> ExtendedProperty<TProperty>(
-            Expression<Func<T, TProperty>> propertyLambda)
+        public ExtendedPropertyHelper<TEntity> ExtendedProperty<TProperty>(
+            Expression<Func<TEntity, TProperty>> propertyLambda)
         {
             if (propertyLambda == null)
                 throw new ArgumentNullException("propertyLambda");
@@ -205,8 +205,8 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                     "Expression '{0}' does not select any property",
                     propertyLambda.ToString()));
 
-            ExtendedPropertyHelper<T> helper =
-                new ExtendedPropertyHelper<T>(property);
+            ExtendedPropertyHelper<TEntity> helper =
+                new ExtendedPropertyHelper<TEntity>(property);
             return helper;
         }
     }

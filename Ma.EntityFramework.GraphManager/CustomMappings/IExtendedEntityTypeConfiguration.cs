@@ -4,8 +4,12 @@ using Ma.EntityFramework.GraphManager.CustomMappings.MappingHelpers;
 
 namespace Ma.EntityFramework.GraphManager.CustomMappings
 {
-    public interface IExtendedEntityTypeConfiguration<T>
-        where T : class
+    /// <summary>
+    /// Extended entity type configurations.
+    /// </summary>
+    /// <typeparam name="TEntity">Type of entity.</typeparam>
+    public interface IExtendedEntityTypeConfiguration<TEntity>
+        where TEntity : class
     {
         /// <summary>
         /// Mark properties as unique.
@@ -13,7 +17,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
         /// <typeparam name="TProperty">Type of property.</typeparam>
         /// <param name="propertyLambda">Lambda expression to mark properties as unique.</param>
         void HasUnique<TProperty>(
-            Expression<Func<T, TProperty>> propertyLambda);
+            Expression<Func<TEntity, TProperty>> propertyLambda);
 
         /// <summary>
         /// Mark properties state of which has to be defined in order
@@ -24,7 +28,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
         /// <param name="propertyLambda">Lambda expression to get 
         /// properties state of which must be defined.</param>
         void HasStateDefiner<TProperty>(
-            Expression<Func<T, TProperty>> propertyLambda);
+            Expression<Func<TEntity, TProperty>> propertyLambda);
 
         /// <summary>
         /// Get property of source to work on.
@@ -32,7 +36,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
         /// <typeparam name="TProperty">Type of property.</typeparam>
         /// <param name="propertyLambda">Lmbda expression to get property.</param>
         /// <returns>Extended property helper to be able to work on property.</returns>
-        ExtendedPropertyHelper<T> ExtendedProperty<TProperty>(
-            Expression<Func<T, TProperty>> propertyLambda);
+        ExtendedPropertyHelper<TEntity> ExtendedProperty<TProperty>(
+            Expression<Func<TEntity, TProperty>> propertyLambda);
     }
 }
