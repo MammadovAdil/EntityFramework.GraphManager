@@ -2,6 +2,21 @@
 
 **Automatically** handle and define state of *complex hierarchical* graph of entities for *EntityFramework Code-First*.
 
+## Prerequisite
+
+- This API should be used with EntityFramewok Code-First
+- You should be familiar with Fluent API ([quick introduction](http://stackoverflow.com/documentation/entity-framework/4530/code-first-fluent-api/15861/mapping-models#t=201611100620522234993)).
+- Add *explicit* foreign key properties to your models. If we do not add explicit property and configure it as foreign key, then entity framework will create it for us. But, we have to create it ourselves.
+```
+public class Post
+{
+    // Foreign key to Blog must exist
+    public int BlogID { get; set; }
+    public Blog Blog { get; set; }
+}
+```
+- Additionally, if you have *many-to-many* relationships, you should create model for third table. For example, if you have *Student* and *Course* models, and if there is many-to-many relation between them, you should also create model for relating *third table*, which porbably will be *StudentCourse*. Then *Student and StudentCourse*, *Course and StudentCourse* models will have *one-to-many* relationships. This will help a lot when we want to change which Students attend which Courses (add, update or delete.).
+
 ## Features:
 
 - Automatically *define state* of entity graph with ease.
