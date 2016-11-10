@@ -24,7 +24,7 @@ Install from nuget:
 1. Your mapping classes should intherit `ExtendedEntityTypeConfiguration<TEntity>`, where `TEntity` is type of entity 
 which you are configuring mappings for. To be able to do so, you have to add 
 **Ma.EntityFramework.GraphManager.CustomMappings** namespace to unsings section. 
-Remember that, *you do not have to do so* if you do not need any custom mappings (i.e. unique keys, not updated properties and etc.). 
+Remember that, *you do not have to inherit this configuration class* if you do not need any custom mappings (i.e. unique keys, not updated properties and etc.). 
 Automatic state defining should still work without this.
 2. Add **Ma.EntityFramework.GraphManager** to your usings section where to you want to add or update entities.
 3. Define state of whole graph using just one line: `context.AddOrUpdate(entity);`
