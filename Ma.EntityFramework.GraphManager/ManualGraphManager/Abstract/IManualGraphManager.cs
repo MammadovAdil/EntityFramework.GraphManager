@@ -13,16 +13,6 @@ namespace Ma.EntityFramework.GraphManager.ManualGraphManager.Abstract
         /// <returns>Entry helper to be able to work on entry.</returns>
         IEntryHelper<TEntity> Entry<TEntity>(TEntity entity)
             where TEntity : class;
-
-        /// <summary>
-        /// Detach entity from context.
-        /// </summary>
-        /// <typeparam name="TEntity">Type of entity to detach.</typeparam>
-        /// <param name="entity">Entity to detach.</param>
-        /// <param name="detachDependants">Also detach dependant 
-        /// navigation properties.</param>
-        void DetachWithDependants<TEntity>(TEntity entity)
-            where TEntity : class;
     }
 
     public interface IManualGraphManager<T>

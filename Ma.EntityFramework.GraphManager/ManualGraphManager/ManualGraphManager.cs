@@ -9,19 +9,21 @@ using Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers;
 
 namespace Ma.EntityFramework.GraphManager.ManualGraphManager
 {
+    /// <summary>
+    /// Manage graphs manually after automatic state define.
+    /// </summary>
     public class ManualGraphManager
         : IManualGraphManager
     {
         private Lazy<ContextHelper> lazyContextHelper;
 
-        private DbContext Context { get; set; }       
+        private DbContext Context { get; set; }
 
         /// <summary>
-        /// List of entities to manipulate.
+        /// Constructor with context.
         /// </summary>
-        //public List<T> EntityCollection { get; set; }
-
-        public ManualGraphManager(DbContext contextParam)
+        /// <param name="contextParam">DbContext.</param>
+        internal ManualGraphManager(DbContext contextParam)
         {
             if (contextParam == null)
                 throw new ArgumentNullException("contextParam");
@@ -52,7 +54,7 @@ namespace Ma.EntityFramework.GraphManager.ManualGraphManager
             where TEntity : class
         {
             if (entity == null)
-                throw new ArgumentNullException("entity");
+                throw new ArgumentNullException(nameof(entity));
 
             DbEntityEntry entry = Context.Entry(entity);
 
@@ -63,27 +65,11 @@ namespace Ma.EntityFramework.GraphManager.ManualGraphManager
 
             return new EntryHelper<TEntity>(entry);
         }
-
-        /// <summary>
-        /// Detach entity from context.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// When entity is null
-        /// </exception>
-        /// <typeparam name="TEntity">Type of entity to detach.</typeparam>
-        /// <param name="entity">Entity to detach.</param>
-        /// <param name="detachDependants">Also detach dependant 
-        /// navigation properties.</param>
-        public void DetachWithDependants<TEntity>(TEntity entity)
-            where TEntity : class
-        {
-            if (entity == null)
-                throw new ArgumentNullException("entity");
-
-            ContextHelper.DetachWithDependants(entity, true);
-        }
     }
 
+    /// <summary>
+    /// Manage graphs manually after automatic state define.
+    /// </summary>
     public class ManualGraphManager<T>
         : ManualGraphManager, IManualGraphManager<T>
         where T : class
@@ -93,7 +79,11 @@ namespace Ma.EntityFramework.GraphManager.ManualGraphManager
         /// </summary>
         public List<T> EntityCollection { get; set; }
 
-        public ManualGraphManager(DbContext contextParam)
+        /// <summary>
+        /// Constructor with context.
+        /// </summary>
+        /// <param name="contextParam">DbContext.</param>
+        internal ManualGraphManager(DbContext contextParam)
             : base(contextParam)
         {
         }
