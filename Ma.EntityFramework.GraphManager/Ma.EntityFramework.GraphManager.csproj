@@ -75,7 +75,6 @@
     <Compile Include="Models\DependenceInfo.cs" />
     <Compile Include="Models\FilterType.cs" />
     <Compile Include="Models\ForeignKeyDetail.cs" />
-    <Compile Include="Models\LinqRuntimeTypeBuilder.cs" />
     <Compile Include="Models\NavigationDetail.cs" />
     <Compile Include="Models\RelationshipDetail.cs" />
     <Compile Include="Models\KeyDetail.cs" />

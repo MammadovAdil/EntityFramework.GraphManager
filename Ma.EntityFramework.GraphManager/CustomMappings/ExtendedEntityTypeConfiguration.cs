@@ -94,8 +94,8 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
 
         /// <summary>
         /// Mark properties state of which has to be defined before entity itself
-        /// in order to be able to correctly define state of entity itslef. These properties
-        /// are those uniqeness of which can be determined easily according to their 
+        /// in order to be able to correctly define state of entity itself. These properties
+        /// are those uniqueness of which can be determined easily according to their 
         /// property values. Properties from which state of entity is dependant from 
         /// and which are in one-to-one relationship with this entity should be marked. 
         /// Parents of entity or entities which are in many-to-one relationship with this entity
