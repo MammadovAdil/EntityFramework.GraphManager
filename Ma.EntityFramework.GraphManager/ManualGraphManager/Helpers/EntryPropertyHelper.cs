@@ -21,7 +21,7 @@ namespace Ma.EntityFramework.GraphManager.ManualGraphManager.Helpers
             if (entryPropertyParam == null)
                 throw new ArgumentNullException("entryPropertyParam");
 
-            EntryProperty = entryPropertyParam;            
+            EntryProperty = entryPropertyParam;                        
         }
 
         /// <summary>

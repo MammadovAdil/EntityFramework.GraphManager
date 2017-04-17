@@ -22,7 +22,7 @@ namespace Ma.EntityFramework.GraphManager.ManualGraphManager.Helpers
             if (entryParam == null)
                 throw new ArgumentNullException("entryParam");
 
-            Entry = entryParam;                       
+            Entry = entryParam;      
         }
 
         /// <summary>

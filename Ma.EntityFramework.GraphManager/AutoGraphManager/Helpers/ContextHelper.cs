@@ -441,15 +441,6 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            if (entity.GetType().Name == "Person")
-            {
-                var pin = entity.GetPropertyValue("Pin").ToString();
-                if (pin == "FAC3A")
-                {
-
-                }
-            }
-
             string typeName = entity.GetType().Name;
             IGraphEntityTypeManager graphEntityTypeManager =
                 GetEntityTypeManager(typeName);
@@ -1028,10 +1019,9 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             IEnumerable<object> stateNotDefinedEntities = relatedEntityList
                 .Except(definedEntityStore)
                 .Where(m => Context.Entry(m).State != EntityState.Detached);
-            for (int i = 0; i < stateNotDefinedEntities.Count(); i++)
+            while(stateNotDefinedEntities.Any())
             {
-                dynamic stateNotDefinedEntity = stateNotDefinedEntities
-                    .ElementAt(i);
+                dynamic stateNotDefinedEntity = stateNotDefinedEntities.First();
 
                 DefineState(
                         stateNotDefinedEntity,
