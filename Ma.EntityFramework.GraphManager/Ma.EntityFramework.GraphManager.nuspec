@@ -11,7 +11,7 @@
     <iconUrl>https://cdn1.iconfinder.com/data/icons/database-management-2/100/-_database_hosting_network_server-01-128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Automatically define state of and handle graph of EntityFramework models with ease.</description>
-    <releaseNotes>Fixed bug which occurs after dealing with duplicates.</releaseNotes>
+    <releaseNotes>Enhanced property difference checking.</releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>EntityFramework Graph CodeFirst GraphManager POCO</tags>
 

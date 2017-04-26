@@ -1,6 +1,7 @@
 ﻿using System.Linq;
 using Ma.ExtensionMethods.Reflection;
 using System.Collections;
+using System;
 
 namespace Ma.EntityFramework.GraphManager.Models
 {
@@ -16,6 +17,12 @@ namespace Ma.EntityFramework.GraphManager.Models
         public static bool IsEqual<T>(T first, T second)
         {
             bool isEqual = false;
+
+            // Do not try to update emptry string to null and null to empty string
+            if ((first is string || second is string)
+                && string.IsNullOrEmpty(Convert.ToString(first))
+                && string.IsNullOrEmpty(Convert.ToString(second)))
+                return true;
 
             if (first != null && second == null)
                 isEqual = false;
