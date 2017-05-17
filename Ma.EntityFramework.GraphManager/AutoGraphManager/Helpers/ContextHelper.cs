@@ -260,7 +260,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                     .Entries<TEntity>()
                     .Select(m => m.Entity)
                     .Where(filterExpression.Compile())
-                    .ToList();                
+                    .ToList();
 
                 if (duplicateEntityFromLocal.Any())
                 {
@@ -961,10 +961,12 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            // Get all related entities to entity, incluing itself,
-            // for using afterwards.
+            /// If state of child entities must be defined, 
+            /// get all related entities to entity, incluing itself,
+            /// for using afterwards.
             List<object> relatedEntityList = new List<object>();
-            GetAllEntities(entity, relatedEntityList);
+            if (defineStateOfChildEntities)
+                GetAllEntities(entity, relatedEntityList);
 
             List<object> definedEntityStore = new List<object>();
             if (defineStateOfChildEntities)
@@ -1019,7 +1021,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             IEnumerable<object> stateNotDefinedEntities = relatedEntityList
                 .Except(definedEntityStore)
                 .Where(m => Context.Entry(m).State != EntityState.Detached);
-            while(stateNotDefinedEntities.Any())
+            while (stateNotDefinedEntities.Any())
             {
                 dynamic stateNotDefinedEntity = stateNotDefinedEntities.First();
 

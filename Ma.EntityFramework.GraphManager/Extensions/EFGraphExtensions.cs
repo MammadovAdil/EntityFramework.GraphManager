@@ -92,9 +92,11 @@ namespace Ma.EntityFramework.GraphManager
         /// <typeparam name="TEntity">Type of entity.</typeparam>
         /// <param name="context">Context to work on.</param>
         /// <param name="entityList">List of entities to define state of.</param>
-        /// <param name="defineStateOfChildEntities">If set to true define state of
+        /// <param name="defineStateOfChildEntities">
+        /// If set to true define state of
         /// configured child entities. This rule also applied to child entities
-        /// of child entities and so on.</param>
+        /// of child entities and so on.
+        /// </param>
         /// <returns>IManualGraphManager associated with current context to work on further.</returns>
         public static IManualGraphManager<TEntity> DefineState<TEntity>(
             this DbContext context,
@@ -182,8 +184,37 @@ namespace Ma.EntityFramework.GraphManager
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            context.Add(entity);            
-            return context.DefineState(entity, true);
+            return context.AddOrUpdate(entity, true);
+        }
+
+        /// <summary>
+        /// Add or update entity. If entity already exists in the source
+        /// set and values has not been altered set the state to Unchanged, 
+        /// else if values has been changed set the state of changed properties
+        /// to Modified, otherwise set the state of entity to Added. Do it for
+        /// all child entities also.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// When context or entity is null.
+        /// </exception>
+        /// <typeparam name="TEntity">Type of entity.</typeparam>
+        /// <param name="context">Context to work on.</param>
+        /// <param name="entity">Entity to add or update.</param>
+        /// <param name="defineStateOfChildEntities">Define state of child entities.</param>
+        /// <returns>IManualGraphManager associated with current context to work on further.</returns>
+        public static IManualGraphManager<TEntity> AddOrUpdate<TEntity>(
+            this DbContext context,
+            TEntity entity,
+            bool defineStateOfChildEntities)
+            where TEntity : class
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            context.Add(entity);
+            return context.DefineState(entity, defineStateOfChildEntities);
         }
 
         /// <summary>
@@ -210,8 +241,37 @@ namespace Ma.EntityFramework.GraphManager
             if (entityList == null)
                 throw new ArgumentNullException(nameof(entityList));
 
+            return context.AddOrUpdate(entityList, true);
+        }
+
+        /// <summary>
+        /// Add or update list of entities. If entity already exists in the source
+        /// set and values has not been altered set the state to Unchanged, 
+        /// else if values has been changed set the state of changed properties
+        /// to Modified, otherwise set the state of entity to Added. Do it for child
+        /// entities also.
+        /// </summary>
+        /// <exception cref="ArgumentNullException">
+        /// When context or entity is null.
+        /// </exception>
+        /// <typeparam name="TEntity">Type of entity.</typeparam>
+        /// <param name="context">Context to work on.</param>
+        /// <param name="entityList">List of entities to add or update.</param>
+        /// <param name="defineStateOfChildEntities">Define state of child entities.</param>
+        /// <returns>IManualGraphManager associated with current context to work on further.</returns>
+        public static IManualGraphManager<TEntity> AddOrUpdate<TEntity>(
+            this DbContext context,
+            List<TEntity> entityList,
+            bool defineStateOfChildEntities)
+            where TEntity : class
+        {
+            if (context == null)
+                throw new ArgumentNullException(nameof(context));
+            if (entityList == null)
+                throw new ArgumentNullException(nameof(entityList));
+
             entityList.ForEach(m => context.Add(m));
-            return context.DefineState(entityList, true);
+            return context.DefineState(entityList, defineStateOfChildEntities);
         }
 
         /// <summary>
