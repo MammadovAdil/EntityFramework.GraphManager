@@ -16,7 +16,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
         private IContextFactory ContextFactory { get; set; }
         internal string EntityTypeName { get; private set; }
 
-        public GraphEntityTypeManager(IContextFactory contextFactory, 
+        public GraphEntityTypeManager(IContextFactory contextFactory,
             string entityTypeName)
         {
             if (contextFactory == null)
@@ -167,7 +167,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
 
             // Try to get from store
             Tuple<string, string> key = new Tuple<string, string>(EntityTypeName, foreignKeyName);
-            if(Store.ForeignKeyOrigin.ContainsKey(key))
+            if (Store.ForeignKeyOrigin.ContainsKey(key))
                 return Store.ForeignKeyOrigin[key];
 
             string originOfForeignKey = string.Empty;
@@ -195,6 +195,11 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                 string currentReferencedTypeName = parentType.FromDetails.ContainerClass;
                 while (!string.IsNullOrEmpty(currentReferencedTypeName))
                 {
+                    // If EntityTypeName and currentReferencedTypeName is same,
+                    // then this is self reference, so we need to break infinete iteration.
+                    if (EntityTypeName == currentReferencedTypeName)
+                        break;
+
                     IGraphEntityTypeManager referencedTypeManager = ContextFactory
                         .GetEntityTypeManager(currentReferencedTypeName);
 

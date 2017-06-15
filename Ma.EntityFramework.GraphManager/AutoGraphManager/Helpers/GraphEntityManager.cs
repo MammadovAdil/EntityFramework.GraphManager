@@ -174,6 +174,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
         /// <summary>
         /// Construct filter expression for entity. 
         /// </summary>
+        /// <param name="entity">Entity to construct filter expression for.</param>
         /// <param name="typeOfFilter">Type of filter expression.</param>
         /// <returns>Filter expression according to entity.</returns>
         public Expression<Func<TEntity, bool>> ConstructFilterExpression(
@@ -249,12 +250,10 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                         var uniquePropertyNames = unique.Properties.Select(m => m.Name).ToList();
                         var uniqueForeignKeys = uniqueSourceTypeManager
                             .GetForeignKeyDetails()
-                            .Where(m => m.FromDetails.ContainerClass != unique.SourceType.Name)
                             .Select(m => new
                             {
                                 TargetClass = m.FromDetails.ContainerClass,
-                                Keys = m.ToDetails.Keys
-                                            .Intersect(uniquePropertyNames)
+                                Keys = m.ToDetails.Keys.Intersect(uniquePropertyNames)
                             })
                             .Where(m => m.Keys != null
                                 && m.Keys.Any());
@@ -273,7 +272,8 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                                     // Get navigation relation according to foreign key
                                     NavigationRelation navigationRelation = navigationDetailsOfCurrent
                                         .Relations
-                                        .FirstOrDefault(r => r.PropertyTypeName.Equals(uniqueFk.TargetClass)
+                                        .FirstOrDefault(r => r.Direction == NavigationDirection.From
+                                            && r.PropertyTypeName.Equals(uniqueFk.TargetClass)
                                             && r.ToKeyNames.Intersect(uniqueFk.Keys).Any());
 
                                     // If corresponding navigation property is not null
@@ -284,8 +284,8 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                                         bool foreignKeyHasStoreGeneratedPrimaryKey =
                                             uniqueFk.Keys.Any(k =>
                                             {
-                                                /// Get origin of foreign key and check 
-                                                /// if it has store generated key.
+                                                // Get origin of foreign key and check 
+                                                // if it has store generated key.
                                                 string foreignKeyOrigin = uniqueSourceTypeManager
                                                     .GetOriginOfForeignKey(k);
                                                 IGraphEntityTypeManager foreignKeyOriginTypeManger = ContextFactory

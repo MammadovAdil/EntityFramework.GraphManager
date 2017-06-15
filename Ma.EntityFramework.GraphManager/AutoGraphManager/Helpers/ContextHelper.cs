@@ -329,7 +329,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             // Get parent properties of entity.
             // Properties which have navigation property type of which
             // is type of entity. Ignore navigation properties
-            // which are mutual navigation properties with entity itself     
+            // which are mutual navigation properties with entity itself.     
             string typeName = currentValue.GetType().Name;
             List<NavigationDetail> parentNavigationDetails = GetNavigationDetails()
                 .Select(n => new NavigationDetail()
@@ -341,7 +341,9 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                                    && !navigationDetailOfCurrent
                                         .Relations
                                         .Any(c => c.PropertyTypeName.Equals(n.SourceTypeName)
-                                                && c.TargetMultiplicity == r.SourceMultiplicity))
+                                                && c.TargetMultiplicity == r.SourceMultiplicity
+                                                && c.FromKeyNames.SequenceEqual(r.FromKeyNames)
+                                                && c.ToKeyNames.SequenceEqual(r.ToKeyNames)))
                         .ToList()
                 })
                 .Where(n => n.Relations != null
