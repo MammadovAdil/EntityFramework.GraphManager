@@ -16,6 +16,16 @@ namespace Ma.EntityFramework.GraphManager
     /// </summary>
     public static class EFGraphExtensions
     {
+        public static IManualGraphManager<TEntity> DefineStateNew<TEntity>(
+            this DbContext context,
+            List<TEntity> entityList,
+            bool defineStateOfChildEntities)
+            where TEntity : class
+        {
+            ContextHelper contextHelper = new ContextHelper(context);
+            return contextHelper.DefineStateNew(entityList, defineStateOfChildEntities);
+        }
+
         /// <summary>
         /// Define state of all entities in the context.
         /// </summary>
@@ -110,7 +120,8 @@ namespace Ma.EntityFramework.GraphManager
                 throw new ArgumentNullException(nameof(entityList));
 
             ContextHelper contextHelper = new ContextHelper(context);
-            return contextHelper.DefineState(entityList, defineStateOfChildEntities);
+            //return contextHelper.DefineState(entityList, defineStateOfChildEntities);
+            return contextHelper.DefineStateNew(entityList, defineStateOfChildEntities);
         }
 
         /// <summary>

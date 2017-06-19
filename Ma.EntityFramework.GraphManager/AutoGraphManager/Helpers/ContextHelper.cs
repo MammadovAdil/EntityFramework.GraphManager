@@ -539,7 +539,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                 {
                     if (childEntityProperty.PropertyType.IsCollectionType())
                     {
-                        // If child entity is collection define all entities inside this collection.
+                        // If child entity is collection get all entities inside this collection.
                         IEnumerable<object> enumerableChildEntity =
                                     entity.GetPropertyValue(childEntityProperty.Name) as IEnumerable<object>;
 
@@ -558,7 +558,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                     }
                     else
                     {
-                        // If child entity is not collection define state of its own.
+                        // If child entity is not collection get its own.
                         dynamic childEntity = entity.GetPropertyValue(childEntityProperty.Name);
 
                         if (childEntity != null
@@ -580,10 +580,16 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             // Initialize store
             Dictionary<string, int> store = new Dictionary<string, int>();
 
-            List<string> typeNames = Context
-                .ChangeTracker
-                .Entries()
-                .Select(m => m.Entity.GetType().Name)
+            //List<string> typeNames = Context
+            //    .ChangeTracker
+            //    .Entries()
+            //    .Select(m => m.Entity.GetType().Name)
+            //    .ToList();
+
+            List<string> typeNames = ObjectContext
+                .MetadataWorkspace
+                .GetItems<EntityType>(DataSpace.CSpace)
+                .Select(m => m.Name)
                 .ToList();
 
             foreach (string typeName in typeNames)
@@ -881,7 +887,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
         public IManualGraphManager DefineState()
         {
             // Calculate state define order.
-            var orderedCollection = CalculateStateDefineOrder();
+            var stateDefineOrderCollection = CalculateStateDefineOrder();
             List<Type> addedEntityTypes = Context
                 .ChangeTracker
                 .Entries()
@@ -892,18 +898,18 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                 .Select(m => m.Name)
                 .ToList();
 
-            foreach (var ordered in orderedCollection)
+            foreach (var stateDefineOrder in stateDefineOrderCollection)
             {
                 // If entity exists according to current define order.
                 bool entityExists = addedEntityTypeNames
-                    .Contains(ordered.Key);
+                    .Contains(stateDefineOrder.Key);
 
                 if (!entityExists)
                     continue;
 
                 // Get type of entity
                 Type entityType = addedEntityTypes
-                    .First(m => m.Name == ordered.Key);
+                    .First(m => m.Name == stateDefineOrder.Key);
 
                 // Get list of entities to define state.
                 List<object> definedEntityStore = new List<object>();
@@ -1070,6 +1076,62 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             ManualGraphManager<TEntity> manualGraphManager =
                 new ManualGraphManager<TEntity>(Context);
             manualGraphManager.EntityCollection = entityList;
+            return manualGraphManager;
+        }
+
+        public IManualGraphManager<TEntity> DefineStateNew<TEntity>(
+            List<TEntity> entityList,
+            bool defineStateOfChildEntities)
+            where TEntity : class
+        {
+            // Calculate state define order.
+            var stateDefineOrderCollection = CalculateStateDefineOrder();
+
+            // Get all entities related to provided list
+            List<object> allEntities = new List<object>();
+            entityList.ForEach(m => GetAllEntities(m, allEntities));
+
+            // Group list of entities by type
+            var groupedEntityList = allEntities
+                .GroupBy(m => m.GetType().Name)
+                .Select(g => new
+                {
+                    TypeName = g.Key,
+                    Entities = g.Select(m => m)
+                })
+                .ToDictionary(m => m.TypeName);
+
+            foreach (var stateDefineOrder in stateDefineOrderCollection)
+            {
+                // If entity exists according to current define order.
+                bool entityExists = groupedEntityList.Keys
+                    .Contains(stateDefineOrder.Key);
+
+                if (!entityExists)
+                    continue;
+
+                // Get list of entities to define state.
+                List<object> definedEntityStore = new List<object>();
+                IEnumerable<object> entitySet = groupedEntityList[stateDefineOrder.Key].Entities;
+
+                // TODO: Entities which have self reference have to be ordered
+
+                // Loop through entiteis and define state.
+                for (int i = 0; i < entitySet.Count(); i++)
+                {
+                    dynamic entity = entitySet.ElementAt(i);
+
+                    DefineState(
+                        entity,
+                        definedEntityStore,
+                        false,
+                        true,
+                        false);
+                }
+            }
+
+            ManualGraphManager<TEntity> manualGraphManager =
+                new ManualGraphManager<TEntity>(Context);
             return manualGraphManager;
         }
 
