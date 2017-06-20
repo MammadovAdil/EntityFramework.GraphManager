@@ -580,12 +580,6 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             // Initialize store
             Dictionary<string, int> store = new Dictionary<string, int>();
 
-            //List<string> typeNames = Context
-            //    .ChangeTracker
-            //    .Entries()
-            //    .Select(m => m.Entity.GetType().Name)
-            //    .ToList();
-
             List<string> typeNames = ObjectContext
                 .MetadataWorkspace
                 .GetItems<EntityType>(DataSpace.CSpace)
@@ -1112,14 +1106,15 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
 
                 // Get list of entities to define state.
                 List<object> definedEntityStore = new List<object>();
-                IEnumerable<object> entitySet = groupedEntityList[stateDefineOrder.Key].Entities;
+                IEnumerable<object> entititiesToDefineStateOf = groupedEntityList[stateDefineOrder.Key].Entities;
 
                 // TODO: Entities which have self reference have to be ordered
+                OrderEntities(entititiesToDefineStateOf);
 
                 // Loop through entiteis and define state.
-                for (int i = 0; i < entitySet.Count(); i++)
+                for (int i = 0; i < entititiesToDefineStateOf.Count(); i++)
                 {
-                    dynamic entity = entitySet.ElementAt(i);
+                    dynamic entity = entititiesToDefineStateOf.ElementAt(i);
 
                     DefineState(
                         entity,
@@ -1133,6 +1128,60 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             ManualGraphManager<TEntity> manualGraphManager =
                 new ManualGraphManager<TEntity>(Context);
             return manualGraphManager;
+        }
+
+        private IEnumerable<object> OrderEntities(IEnumerable<object> entityCollection)
+        {
+            Dictionary<object, int> principalCountStore =
+                new Dictionary<object, int>();
+
+            for (int i = 0; i < entityCollection.Count(); i++)
+            {
+                dynamic entity = entityCollection.ElementAt(i);
+                int principalSelfCount = CalculatePrincipalSelfNavigationCount(
+                    entity, principalCountStore);
+            }
+
+            return principalCountStore.OrderBy(m => m.Value).Select(m => m.Key);
+        }
+
+        private int CalculatePrincipalSelfNavigationCount<TEntity>(
+            TEntity entity,
+            Dictionary<object, int> store)
+            where TEntity : class
+        {
+            if (store.ContainsKey(entity))
+                return store[entity];
+
+            string typeName = entity.GetType().Name;
+
+            // Get navigation details and find properties which is refers to itslef.
+            IGraphEntityManager<TEntity> entityManager = GetEntityManager<TEntity>();
+            NavigationDetail navigationDetail = entityManager.GetNavigationDetail();
+            List<string> selfReferringPrincipalPropertyNames = navigationDetail
+                .Relations
+                .Where(m => m.Direction == NavigationDirection.From
+                    && m.PropertyTypeName == typeName)
+                .Select(m => m.PropertyName)
+                .ToList();
+
+            // Loop through principal navigation properties and add their count.
+            int principalSelfCount = 0;
+            foreach (string propertyName in selfReferringPrincipalPropertyNames)
+            {
+                TEntity principalEntity = entity.GetPropertyValue(propertyName) as TEntity;
+
+                // If principla entity is null then continue
+                if (principalEntity == null)
+                    continue;
+
+                // Othewise calculate principal count as 1 + count for principal entity
+                principalSelfCount++;
+                principalSelfCount += CalculatePrincipalSelfNavigationCount(principalEntity, store);
+            }
+
+            store.Add(entity, principalSelfCount);
+            return principalSelfCount;
         }
 
         #region IContextFactory members
