@@ -1108,8 +1108,8 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                 List<object> definedEntityStore = new List<object>();
                 IEnumerable<object> entititiesToDefineStateOf = groupedEntityList[stateDefineOrder.Key].Entities;
 
-                // TODO: Entities which have self reference have to be ordered
-                OrderEntities(entititiesToDefineStateOf);
+                // Order entities to define state of them accordingly.
+                entititiesToDefineStateOf = DefineStateDefineOrder(entititiesToDefineStateOf);
 
                 // Loop through entiteis and define state.
                 for (int i = 0; i < entititiesToDefineStateOf.Count(); i++)
@@ -1130,8 +1130,57 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             return manualGraphManager;
         }
 
-        private IEnumerable<object> OrderEntities(IEnumerable<object> entityCollection)
+        /// <summary>
+        /// Order entities according to principal self navigation count ascendingly
+        /// for defining state appropriately.
+        /// </summary>
+        /// <example>
+        /// firstCategory which has null value on ParentCategory property has 0 principal self 
+        /// navigation count. If ParentCategory of secondCategory is firstCategory, then secondCategory
+        /// has 1 principal self navigation count, if ParentCategory of thirdCateogry is secondCategory, 
+        /// then it has 2 principal self navigaiton count. In this case, state of enitites must be defined 
+        /// in ascending order. In our example, the order is like below:
+        /// 1. firstCategory, 2. secondCategory, 3. thirdCateogry.
+        /// </example>
+        /// <exception cref="ArgumentNullException">
+        /// When entityCollection is null.
+        /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// When entities in collection do not have same type.
+        /// </exception>
+        /// <param name="entityCollection">EntityCollection to define state define order.</param>
+        /// <returns>Orderer entity collection suiting for defining state.</returns>
+        private IEnumerable<object> DefineStateDefineOrder(IEnumerable<object> entityCollection)
         {
+            if (entityCollection == null)
+                throw new ArgumentNullException(nameof(entityCollection));
+
+            if (!entityCollection.Any())
+                return entityCollection;
+
+            // Get type of entity
+            string entityTypeName = entityCollection.First().GetType().Name;
+
+            // All entities must have same type in collection.
+            if (entityCollection
+                .Any(m => m != null && m.GetType().Name != entityTypeName))
+                throw new InvalidOperationException(string.Format(
+                    "All entities must have same type in collection to define state define order."
+                        + " Entity type: {0}.",
+                    entityTypeName));
+
+            // Check if entity has navigation propert to itself. If not, then
+            // there is no need to order them, otherwise order.
+            IGraphEntityTypeManager entityTypeManager = GetEntityTypeManager(entityTypeName);
+            NavigationDetail navigationDetail = entityTypeManager.GetNavigationDetail();
+            bool hasPrinciplaSelfNavigationProperty = navigationDetail
+                .Relations
+                .Any(m => m.Direction == NavigationDirection.From
+                    && m.PropertyTypeName == entityTypeName);
+            if (!hasPrinciplaSelfNavigationProperty)
+                return entityCollection;
+
+            // Initialize store for ordered entities.
             Dictionary<object, int> principalCountStore =
                 new Dictionary<object, int>();
 
@@ -1142,9 +1191,29 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                     entity, principalCountStore);
             }
 
+            // Order according to principal slef navigation properties ascendingly.
             return principalCountStore.OrderBy(m => m.Value).Select(m => m.Key);
         }
 
+        /// <summary>
+        /// Calculate count of principal self navigation properties for 
+        /// ordering to be able to successfully define order.
+        /// </summary>
+        /// <remarks>
+        /// If Category has principal navigation to itself named ParentCategory, we need to
+        /// find count of them to be able to define order appropriately. We need to define state of
+        /// them in ascending order.
+        /// </remarks>
+        /// <example>
+        /// firstCategory which has null value on ParentCategory property has 0 principal self 
+        /// navigation count. If ParentCategory of secondCategory is firstCategory, then secondCategory
+        /// has 1 principal self navigation count, if ParentCategory of thirdCateogry is secondCategory, 
+        /// then it has 2 principal self navigaiton count.
+        /// </example>
+        /// <typeparam name="TEntity">Type of entity.</typeparam>
+        /// <param name="entity">Entity to find principla self navigaiton count.</param>
+        /// <param name="store">Store to add calculated count and check first.</param>
+        /// <returns>Count of principal self navigation count.</returns>
         private int CalculatePrincipalSelfNavigationCount<TEntity>(
             TEntity entity,
             Dictionary<object, int> store)
