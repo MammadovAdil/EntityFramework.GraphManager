@@ -20,7 +20,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
     internal class GraphEntityManager<TEntity>
         : IGraphEntityManager<TEntity>
         where TEntity : class
-    {   
+    {
         private IContextFactory ContextFactory { get; set; }
 
         public GraphEntityManager(IContextFactory contextFactory)
@@ -41,7 +41,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
         private IContextHelper ContextHelper
         {
             get { return ContextFactory.GetContextHelper(); }
-        }     
+        }
         private IGraphEntityTypeManager EntityTypeManager
         {
             get { return ContextFactory.GetEntityTypeManager(TypeName); }
@@ -134,7 +134,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
 
             TEntity matchingEntity = null;
 
-            Expression<Func<TEntity, bool>> filterExpression = 
+            Expression<Func<TEntity, bool>> filterExpression =
                 ConstructFilterExpression(entity, FilterType.IdOptionalUnique);
 
             if (filterExpression != null)
@@ -166,7 +166,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                         entity.GetPropertyData(primaryKeyNames),
                         entity.GetPropertyData(GetUniqueProperties()
                             .Select(m => m.Name))));
-            }            
+            }
 
             return matchingEntity;
         }
@@ -194,9 +194,9 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
 
             ParameterExpression parameterExp = Expression.Parameter(typeof(TEntity), "m");
             Expression pkFilter = null;
-            Expression ukFilter = null;            
+            Expression ukFilter = null;
 
-            bool primaryKeysHaveDefaultValues = entity.HasDefaultValues(primaryKeyNames);            
+            bool primaryKeysHaveDefaultValues = entity.HasDefaultValues(primaryKeyNames);
 
             if (!primaryKeysHaveDefaultValues
                 && typeOfFilter != FilterType.OnlyUnique)
@@ -209,7 +209,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                         primaryKeyNames);
 
                 pkFilter = singleExpressionList.ConstructAndChain();
-            }            
+            }
 
             if (typeOfFilter != FilterType.OnlyId
                     && (primaryKeysHaveDefaultValues
@@ -240,12 +240,12 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                          * be treated as unique, because the real value of PersonId 
                          * will be computed when data will be inserted.
                          ***********************************************************
-                        */                        
+                        */
 
                         IGraphEntityTypeManager uniqueSourceTypeManager = ContextFactory
                             .GetEntityTypeManager(unique.SourceType.Name);
 
-                        bool uniquenessMustBeIgnored = false;                        
+                        bool uniquenessMustBeIgnored = false;
 
                         var uniquePropertyNames = unique.Properties.Select(m => m.Name).ToList();
                         var uniqueForeignKeys = uniqueSourceTypeManager
@@ -258,7 +258,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                             .Where(m => m.Keys != null
                                 && m.Keys.Any());
 
-                        NavigationDetail navigationDetailsOfCurrent = GetNavigationDetail();                        
+                        NavigationDetail navigationDetailsOfCurrent = GetNavigationDetail();
 
                         // If unuque property is foreign key
                         if (uniqueForeignKeys != null
@@ -301,8 +301,8 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                                         }
                                     }
                                 }
-                            }                            
-                        }                        
+                            }
+                        }
 
                         // If uniqueness must be ignored then skip this iteration
                         if (uniquenessMustBeIgnored)
@@ -319,7 +319,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                     if (equalityExpressions.Count > 0)
                         ukFilter = equalityExpressions.ConstructOrChain();
                 }
-            }            
+            }
 
             equalityExpressions.Clear();
             if (pkFilter != null)
@@ -358,47 +358,47 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
         /// </summary>
         /// <param name="entity">Entity to set pk and parent key values.</param>
         /// <param name="matchingEntity">Found matching entity from underlying source.</param>
-        /// <param name="shouldSetParentKeys">Set keys of parent entity 
-        /// to value of child entity at one to one relations.</param>
         public void SynchronizeKeys(
             TEntity entity,
-            TEntity matchingEntity,
-            bool shouldSetParentKeys)
+            TEntity matchingEntity)
         {
-            if (shouldSetParentKeys)
+            /*
+             * 
+             * 
+             * Set keys of parent entity to value of child entity at one to one relations.
+             * 
+             * 
+             */
+            IEnumerable<RelationshipDetail> associatedRealtionships = GetForeignKeyDetails()
+                .Where(m => m.ToDetails.ContainerClass.Equals(entity.GetType().Name)
+                    && m.ToDetails.RelationshipMultiplicity == RelationshipMultiplicity.One);
+
+            foreach (RelationshipDetail relationshipDetail in associatedRealtionships)
             {
-                IEnumerable<RelationshipDetail> associatedRealtionships = GetForeignKeyDetails()
-                    .Where(m => m.ToDetails.ContainerClass.Equals(entity.GetType().Name)
-                        && m.ToDetails.RelationshipMultiplicity == RelationshipMultiplicity.One);
+                // Get parent property name from navigation details using information from foreign keys
+                IGraphEntityTypeManager entityTypeManager = ContextFactory
+                    .GetEntityTypeManager(relationshipDetail.ToDetails.ContainerClass);
+                string parentPropertyName = entityTypeManager
+                    .GetNavigationDetail()
+                    .Relations
+                    .Where(n => n.PropertyTypeName.Equals(relationshipDetail.FromDetails.ContainerClass)
+                                && n.SourceMultiplicity == relationshipDetail.ToDetails.RelationshipMultiplicity
+                                && n.TargetMultiplicity == relationshipDetail.FromDetails.RelationshipMultiplicity)
+                    .Select(n => n.PropertyName)
+                    .FirstOrDefault();
 
+                dynamic parent = entity.GetPropertyValue(parentPropertyName);
 
-                foreach (RelationshipDetail relationshipDetail in associatedRealtionships)
+                if (parent != null)
                 {
-                    // Get parent property name from navigation details using information from foreign keys
-                    IGraphEntityTypeManager entityTypeManager = ContextFactory
-                        .GetEntityTypeManager(relationshipDetail.ToDetails.ContainerClass);
-                    string parentPropertyName = entityTypeManager
-                        .GetNavigationDetail()
-                        .Relations
-                        .Where(n => n.PropertyTypeName.Equals(relationshipDetail.FromDetails.ContainerClass)
-                                    && n.SourceMultiplicity == relationshipDetail.ToDetails.RelationshipMultiplicity
-                                    && n.TargetMultiplicity == relationshipDetail.FromDetails.RelationshipMultiplicity)
-                        .Select(n => n.PropertyName)
-                        .FirstOrDefault();
-
-                    dynamic parent = entity.GetPropertyValue(parentPropertyName);
-
-                    if (parent != null)
+                    foreach (string keyName in relationshipDetail.FromDetails.Keys)
                     {
-                        foreach (string keyName in relationshipDetail.FromDetails.Keys)
-                        {
-                            // At one-to-one relationships priamry key
-                            // and foreign keys must match. So, parent
-                            // and entity must have same property with name of keyName.
-                            ReflectionExtensions.SetPropertyValue(parent,
-                                keyName,
-                                matchingEntity.GetPropertyValue(keyName));
-                        }
+                        // At one-to-one relationships priamry key
+                        // and foreign keys must match. So, parent
+                        // and entity must have same property with name of keyName.
+                        ReflectionExtensions.SetPropertyValue(parent,
+                            keyName,
+                            matchingEntity.GetPropertyValue(keyName));
                     }
                 }
             }
@@ -515,6 +515,6 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             }
 
             return anyPropertyHasChanged;
-        }        
+        }
     }
 }

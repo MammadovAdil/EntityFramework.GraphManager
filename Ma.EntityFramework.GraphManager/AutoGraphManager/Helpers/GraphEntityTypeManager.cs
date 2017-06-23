@@ -284,8 +284,8 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             int count = principalCollection.Count()
                 + stateDefiners.Count();
 
-            // Loop through principal properties and count of
-            // principla properties of them to the current type.
+            // Loop through principal properties and add count of
+            // principal properties of them to the current type.
             // Because when FirstType depends on SecondType,
             // and SecondType depends on ThirdType this means
             // that FirstType depends on SecondType and ThirdType.
