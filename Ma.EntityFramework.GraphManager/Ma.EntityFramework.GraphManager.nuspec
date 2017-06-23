@@ -11,13 +11,17 @@
     <iconUrl>https://cdn1.iconfinder.com/data/icons/database-management-2/100/-_database_hosting_network_server-01-128.png</iconUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Automatically define state of and handle graph of EntityFramework models with ease.</description>
-    <releaseNotes>1. Enhanced unique key ignorance check. 2. Enhanced duplicate entity replacement in parents.</releaseNotes>
+    <releaseNotes>
+      1. Changed algorithm to define state of child entities.
+      2. Added ability to define state of entities which have self reference correctly.
+      3. Other imporvements.
+    </releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>EntityFramework Graph CodeFirst GraphManager POCO</tags>
 
     <dependencies>
       <dependency id="Ma.ExtensionMethods" version="1.0.0" />
-      <dependency id="EntityFramework" version="6.1.0" />
+      <dependency id="EntityFramework" version="6.1.3" />
     </dependencies>
   </metadata>
 </package>

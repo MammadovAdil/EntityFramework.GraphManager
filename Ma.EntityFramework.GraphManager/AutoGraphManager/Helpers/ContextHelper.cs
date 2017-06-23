@@ -600,170 +600,6 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
         }
 
         /// <summary>
-        /// Define state of collection of complex 
-        /// navigation properties of entity.
-        /// </summary>
-        /// <typeparam name="TEntity">Type of entity.</typeparam>
-        /// <param name="entity">Entity to define state of child entities.</param>
-        /// <param name="definedEntityStore">Storage to store already state
-        /// defined entities to not to define their states again</param>
-        /// <param name="propertyCollection">Collection of complex 
-        /// properties of entity to define state of.</param>
-        /// <param name="shouldSetParentKeys">Set keys of parent entity
-        /// to primary keys of child entity in one-to-one relationships.
-        /// This parameter is mainly used while defining state of child entities
-        /// when called by DefineStateOfChildEntities method.</param>
-        /// <param name="definingStateOfStateDefiner">Identifies
-        /// if defining state of normal navigation properties
-        /// or explicitly set StateDefiners. 
-        /// Mainly provided by DefineStateOfChildEntities method.</param>
-        private void DefineStateOfProperties<TEntity>(
-            TEntity entity,
-            List<object> definedEntityStore,
-            List<PropertyInfo> propertyCollection,
-            bool shouldSetParentKeys,
-            bool definingStateOfStateDefiner)
-            where TEntity : class
-        {
-            if (propertyCollection != null
-                        && propertyCollection.Count > 0)
-            {
-                foreach (PropertyInfo childEntityProperty in propertyCollection)
-                {
-                    if (childEntityProperty.PropertyType.IsCollectionType())
-                    {
-                        // If child entity is collection define all entities inside this collection.
-                        IEnumerable<object> enumerableChildEntity =
-                                    entity.GetPropertyValue(childEntityProperty.Name) as IEnumerable<object>;
-
-                        if (enumerableChildEntity != null)
-                        {
-                            for (int i = 0; i < enumerableChildEntity.Count(); i++)
-                            {
-                                dynamic childEntity = enumerableChildEntity.ElementAt(i);
-                                if (childEntity != null
-                                        && !definedEntityStore.Contains(childEntity))
-                                    DefineState(
-                                        childEntity,
-                                        definedEntityStore,
-                                        true,
-                                        shouldSetParentKeys,
-                                        definingStateOfStateDefiner);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        // If child entity is not collection define state of its own.
-                        dynamic childEntity = entity.GetPropertyValue(childEntityProperty.Name);
-
-                        if (childEntity != null
-                                && !definedEntityStore.Contains(childEntity))
-                            DefineState(
-                                childEntity,
-                                definedEntityStore,
-                                true,
-                                shouldSetParentKeys,
-                                definingStateOfStateDefiner);
-                    }
-
-                }
-            }
-        }
-
-        /// <summary>
-        /// Define state of child entities of entity.
-        /// </summary>
-        /// <remarks>
-        /// If there are entities which are in many-to-one relationship
-        /// with parent entity and if there is any child entity marked as
-        /// StateDefiner, thir state must be defined before state of entity itslef
-        /// has been defined.
-        /// </remarks>
-        /// <typeparam name="TEntity">Type of entity.</typeparam>
-        /// <param name="entity">Entity to define state of child entities.</param>
-        /// <param name="definedEntityStore">Storage to store already state
-        /// defined entities to not to define their states again</param>
-        /// <param name="stateDefineOrder">State of child entities 
-        /// with what define order must be defined.</param>
-        /// <param name="definingStateOfStateDefiner">Identifies
-        /// if defining state of normal navigation properties
-        /// or explicitly set StateDefiners. 
-        /// Mainly provided by DefineStateOfChildEntities method.</param>
-        private void DefineStateOfChildEntities<TEntity>(
-            TEntity entity,
-            List<object> definedEntityStore,
-            DefineOrder stateDefineOrder,
-            bool definingStateOfStateDefiner)
-            where TEntity : class
-        {
-            // If defining the state of entity before itself, parent key values
-            // should be set to primary key values of child if matching entity
-            // for the child has been found. Otherwise this is not necessary.
-            bool shouldSetParentKeys = stateDefineOrder == DefineOrder.Beforhand
-                ? true
-                : false;
-
-            IGraphEntityManager<TEntity> graphEntityManager = GetEntityManager<TEntity>();
-            NavigationDetail navigationDetail = graphEntityManager.GetNavigationDetail();
-            IEnumerable<PropertyInfo> navigationPropeties = navigationDetail
-                .Relations
-                .Select(n => entity.GetProperty(n.PropertyName));
-
-            // Get principal properties
-
-            /*
-             *   When defining state of explicitly set StateDefiners state of one-to-one
-             *   principal parent should not be defined. Explicitly set StateDefiners
-             *   are dependent one-to-one navigation properties of parent entity and their state
-             *   must be defined before parent entity, trying to get one-to-one parent of
-             *   StateDefiner and defining its state will cause to endless loop.
-             *   So || !definingStateOfStateDefiner is used.
-            */
-            IEnumerable<PropertyInfo> principalProperties = navigationDetail.Relations
-                .Where(r => r.Direction == NavigationDirection.From
-                    && (r.SourceMultiplicity == RelationshipMultiplicity.Many
-                        || !definingStateOfStateDefiner))
-                .Select(r => navigationPropeties.FirstOrDefault(n => n.Name.Equals(r.PropertyName)));
-
-            // Get state definers
-            IEnumerable<PropertyInfo> stateDefiners = MappingStorage.Instance.StateDefiners
-                .Where(s => s.SourceType.Equals(entity.GetType()))
-                .SelectMany(s => s.Properties);
-
-            if (stateDefineOrder == DefineOrder.Beforhand)
-            {
-                DefineStateOfProperties(
-                    entity,
-                    definedEntityStore,
-                    stateDefiners.ToList(),
-                    shouldSetParentKeys,
-                    true);
-
-                DefineStateOfProperties(
-                    entity,
-                    definedEntityStore,
-                    principalProperties.ToList(),
-                    shouldSetParentKeys,
-                    false);
-            }
-            else
-            {
-                List<PropertyInfo> childEntities = navigationPropeties
-                    .Except(stateDefiners)
-                    .Except(principalProperties)
-                    .ToList();
-
-                DefineStateOfProperties(
-                    entity,
-                    definedEntityStore,
-                    childEntities,
-                    shouldSetParentKeys,
-                    false);
-            }
-        }
-
-        /// <summary>
         /// Define state of entity. If entity already exists in the source
         /// set and values has not been altered set the state to Unchanged, 
         /// else if values has been changed set the state of changed properties
@@ -771,107 +607,64 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
         /// </summary>
         /// <typeparam name="TEntity">Type of entity.</typeparam>
         /// <param name="entity">Entity to define state of.</param>
-        /// <param name="definedEntityStore">Storage to store already state
-        /// defined entities to not to define their states again</param>
-        /// <param name="defineStateOfChildEntities">If set to true define state of
-        /// configured child entities. This rule also applied to child entities
-        /// of child entities and so on.</param>
-        /// <param name="shouldSetParentKeys">Set keys of parent entity
-        /// to primary keys of child entity in one-to-one relationships.
-        /// This parameter is mainly used while defining state of child entities
-        /// when called by DefineStateOfChildEntities method.</param>
-        /// <param name="definingStateOfStateDefiner">Identifies
-        /// if defining state of normal navigation properties
-        /// or explicitly set StateDefiners. 
-        /// Mainly provided by DefineStateOfChildEntities method.</param>
-        private void DefineState<TEntity>(
-            TEntity entity,
-            List<object> definedEntityStore,
-            bool defineStateOfChildEntities,
-            bool shouldSetParentKeys,
-            bool definingStateOfStateDefiner)
+        private void DefineState<TEntity>(TEntity entity)
             where TEntity : class
         {
+            // If entity has been detached, then do not try to define its state
+            if (Context.Entry(entity).State == EntityState.Detached)
+                return;
+
             IGraphEntityManager<TEntity> entityManager = GetEntityManager<TEntity>();
+            // Get matching entity.
+            TEntity matchingEntity = entityManager.GetMatchingEntity(entity);
 
-            if (defineStateOfChildEntities)
-                // First define states of child entities of this entity
-                // whith DefineOrder Beforhand.
-                DefineStateOfChildEntities(
-                    entity,
-                    definedEntityStore,
-                    DefineOrder.Beforhand,
-                    definingStateOfStateDefiner);
-
-            // If state of entity has already been definer
-            // or it has already been detached do not define its state
-            if (!definedEntityStore.Contains(entity)
-                && Context.Entry(entity).State != EntityState.Detached)
+            if (matchingEntity != null)
             {
-                // Get matching entity.
-                TEntity matchingEntity = entityManager.GetMatchingEntity(entity);
-
-                if (matchingEntity != null)
+                /*
+                 * If entity is already in the context, for example if 
+                 * entity has been retrieved in program layer using .FirstOrDefault()
+                 * without calling .AsNoTracking()
+                 * then this entity is tracked by entity framework. If entity retrieved
+                 * using this method then, some properties have been altered, setting its
+                 * state to Unchanged will undo all changes. It means that made alterations
+                 * will be lost, and all current values will be replaced by original values.
+                 * And keys will not be altered in child entities by settting state to Unchanged
+                 * which has been done below in this code ( after dealing with duplicates ).
+                 * As a workaround, I detach and readd entity to context to clear original values.
+                */
+                if (Context.Entry(entity).State != EntityState.Added)
                 {
-                    /*
-                     * If entity is already in the context, for example if 
-                     * entity has been retrieved in program layer using .FirstOrDefault()
-                     * without calling .AsNoTracking()
-                     * then this entity is tracked by entity framework. If entity retrieved
-                     * using this method then, some properties have been altered, setting its
-                     * state to Unchanged will undo all changes. It means that made alterations
-                     * will be lost, and all current values will be replaced by original values.
-                     * And keys will not be altered in child entities by settting state to Unchanged
-                     * which has been done below in this code ( after dealing with duplicates ).
-                     * As a workaround, I detach and readd entity to context to clear original values.
-                    */
-                    if (Context.Entry(entity).State != EntityState.Added)
-                    {
-                        Context.Entry(entity).State = EntityState.Detached;
-                        Context.Entry(entity).State = EntityState.Added;
-                    }
-
-                    entityManager.SynchronizeKeys(entity, matchingEntity, shouldSetParentKeys);
-                }
-
-                // Deal with duplicates before proceeding
-                DealWithDuplicates(entity);
-
-                if (matchingEntity != null)
-                {
-                    Context.Entry(entity).State = EntityState.Unchanged;
-                    entityManager.DetectPropertyChanges(entity, matchingEntity);
-                }
-                else
-                {
-                    // When priamry keys of entity is not store generated
-                    // and state of entity is added, value of primary
-                    // keys will not reflected at child entities.
-                    // If primary keys of  entity has values different 
-                    // than default values then set its state to 
-                    // unchanged to fixup keys to solve this issue
-                    // and after that set state to Added
-                    var primaryKeys = entityManager.GetPrimaryKeys();
-                    if (!entity.HasDefaultValues(entityManager
-                            .GetPrimaryKeys()))
-                        Context.Entry(entity).State = EntityState.Unchanged;
-
+                    Context.Entry(entity).State = EntityState.Detached;
                     Context.Entry(entity).State = EntityState.Added;
                 }
 
-                definedEntityStore.Add(entity);
+                entityManager.SynchronizeKeys(entity, matchingEntity);
             }
 
+            // Deal with duplicates before proceeding
+            DealWithDuplicates(entity);
 
-            if (defineStateOfChildEntities)
-                // Finally, define states of child entities of this entity
-                // whith DefineOrder Afterwards.
-                DefineStateOfChildEntities(
-                    entity,
-                    definedEntityStore,
-                    DefineOrder.Afterwards,
-                    definingStateOfStateDefiner);
+            if (matchingEntity != null)
+            {
+                Context.Entry(entity).State = EntityState.Unchanged;
+                entityManager.DetectPropertyChanges(entity, matchingEntity);
+            }
+            else
+            {
+                // When priamry keys of entity is not store generated
+                // and state of entity is added, value of primary
+                // keys will not reflected at child entities.
+                // If primary keys of  entity has values different 
+                // than default values then set its state to 
+                // unchanged to fixup keys to solve this issue
+                // and after that set state to Added
+                var primaryKeys = entityManager.GetPrimaryKeys();
+                if (!entity.HasDefaultValues(entityManager
+                        .GetPrimaryKeys()))
+                    Context.Entry(entity).State = EntityState.Unchanged;
 
+                Context.Entry(entity).State = EntityState.Added;
+            }
         }
 
         /// <summary>
@@ -912,17 +705,15 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                          .Local
                          .CastToGeneric();
 
+                // Order entities to define state of them accordingly.
+                entitySet = DefineStateDefineOrder(entitySet);
+
                 // Loop through entiteis and define state.
                 for (int i = 0; i < entitySet.Count(); i++)
                 {
                     dynamic entity = entitySet.ElementAt(i);
 
-                    DefineState(
-                        entity,
-                        definedEntityStore,
-                        false,
-                        true,
-                        false);
+                    DefineState(entity);
                 }
             }
 
@@ -942,120 +733,37 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
         /// </exception>
         /// <typeparam name="TEntity">Type of entity.</typeparam>
         /// <param name="entity">Entity to define state of.</param>
-        /// <param name="defineStateOfChildEntities">If set to true define state of
+        /// <param name="defineStateOfChildEntities">
+        /// If set to true define state of
         /// configured child entities. This rule also applied to child entities
-        /// of child entities and so on.</param>
+        /// of child entities and so on.
+        /// </param>
         /// <returns>IManualGraphManager associated with current context to work on further.</returns>
         public IManualGraphManager<TEntity> DefineState<TEntity>(
             TEntity entity,
             bool defineStateOfChildEntities)
             where TEntity : class
         {
-            /*
-             *********************************************************************
-             * Description: 
-             * The main purpose of this method is to hide some arguments of original
-             * method, to perform some checks and to not be recursive.
-             * 
-             *********************************************************************
-            */
-
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            /// If state of child entities must be defined, 
-            /// get all related entities to entity, incluing itself,
-            /// for using afterwards.
-            List<object> relatedEntityList = new List<object>();
-            if (defineStateOfChildEntities)
-                GetAllEntities(entity, relatedEntityList);
-
-            List<object> definedEntityStore = new List<object>();
-            if (defineStateOfChildEntities)
-            {
-                /*
-                 * As entities can be in reverse direction. For example 
-                 * if Person entity has PersonDocument depandant navigation property
-                 * and PersonDocument has also navigation property to Person. If PersonDocument
-                 * was sent to define state and Person navigation property of PersonDocument
-                 * is not null then state of Person should be defined with all its dependants
-                 * So we need to get parent of entity and define state of parent.
-                */
-                dynamic parent = GetUppermostParent(entity);
-                // If entity has already been detached it is not needed to define its state
-                if (Context.Entry(parent).State != EntityState.Detached)
-                    DefineState(
-                        parent,
-                        definedEntityStore,
-                        defineStateOfChildEntities,
-                        true,
-                        false);
-            }
-            else
-            {
-                if (Context.Entry(entity).State != EntityState.Detached)
-                    DefineState(
-                        entity,
-                        definedEntityStore,
-                        defineStateOfChildEntities,
-                        true,
-                        false);
-            }
-
-            /*
-             * Get entries state of which have not been defined above and define their state.
-             * This is mostly possible when duplicates added to the context, then one duplicate
-             * is removed from context by DealWithDuplicates method, then if replaced duplicate
-             * has such navigation property which is not dependant, then they stay at the context,
-             * but their state is not defined.
-             * For example, Party has navigation property called AddressRelation, in its term,
-             * AddressRelation has many-to-one navigation property called Address. If there is
-             * duplicate Parties in the context one with AddressRelations and other without,
-             * DealWithDuplicates method can detach Party with AddressRelations and when
-             * this entity is detached AddressRelations will be detahced but Addresses will 
-             * stay in the context, because Addresses are not dependant properties. But link between
-             * objects will be broken, so state of Addresses will not be defined.
-             * Below lines intended to prevent such occasions by defining state of this kind of
-             * entities. 
-             * We need to define state of all entities related to provided entity, state of which
-             * has not been defined and which still exist in the context.
-            */
-            IEnumerable<object> stateNotDefinedEntities = relatedEntityList
-                .Except(definedEntityStore)
-                .Where(m => Context.Entry(m).State != EntityState.Detached);
-            while (stateNotDefinedEntities.Any())
-            {
-                dynamic stateNotDefinedEntity = stateNotDefinedEntities.First();
-
-                DefineState(
-                        stateNotDefinedEntity,
-                        definedEntityStore,
-                        defineStateOfChildEntities,
-                        true,
-                        false);
-            }
-
-            ManualGraphManager<TEntity> manualGraphManager =
-                new ManualGraphManager<TEntity>(Context);
-            manualGraphManager.EntityCollection = new List<TEntity>() { entity };
-
-            return manualGraphManager;
+            // Call overload with list
+            return DefineState(new List<TEntity> { entity }, defineStateOfChildEntities);
         }
 
         /// <summary>
-        /// Define state of list of entities. If entity already exists in the source
-        /// set and values has not been altered set the state to Unchanged, 
-        /// else if values has been changed set the state of changed properties
-        /// to Modified, otherwise set the state of entity to Added.
+        /// Define state of list of entities.
         /// </summary>
         /// <exception cref="ArgumentNullException">
-        /// When entityList is null.
+        /// When enti
         /// </exception>
         /// <typeparam name="TEntity">Type of entity.</typeparam>
         /// <param name="entityList">List of entities to define state of.</param>
-        /// <param name="defineStateOfChildEntities">If set to true define state of
+        /// <param name="defineStateOfChildEntities">
+        /// If set to true define state of
         /// configured child entities. This rule also applied to child entities
-        /// of child entities and so on.</param>
+        /// of child entities and so on.
+        /// </param>
         /// <returns>IManualGraphManager associated with current context to work on further.</returns>
         public IManualGraphManager<TEntity> DefineState<TEntity>(
             List<TEntity> entityList,
@@ -1065,68 +773,64 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             if (entityList == null)
                 throw new ArgumentNullException(nameof(entityList));
 
-            entityList.ForEach(e => DefineState(e, defineStateOfChildEntities));
-
-            ManualGraphManager<TEntity> manualGraphManager =
-                new ManualGraphManager<TEntity>(Context);
-            manualGraphManager.EntityCollection = entityList;
-            return manualGraphManager;
-        }
-
-        public IManualGraphManager<TEntity> DefineStateNew<TEntity>(
-            List<TEntity> entityList,
-            bool defineStateOfChildEntities)
-            where TEntity : class
-        {
-            // Calculate state define order.
-            var stateDefineOrderCollection = CalculateStateDefineOrder();
-
-            // Get all entities related to provided list
-            List<object> allEntities = new List<object>();
-            entityList.ForEach(m => GetAllEntities(m, allEntities));
-
-            // Group list of entities by type
-            var groupedEntityList = allEntities
-                .GroupBy(m => m.GetType().Name)
-                .Select(g => new
-                {
-                    TypeName = g.Key,
-                    Entities = g.Select(m => m)
-                })
-                .ToDictionary(m => m.TypeName);
-
-            foreach (var stateDefineOrder in stateDefineOrderCollection)
+            // If we do not need to define state of child entities,
+            // then we only need to define state of list of entitis.
+            // Otherwise we need to get all entities and define order
+            // in which state of entities must be defined.
+            if (!defineStateOfChildEntities)
             {
-                // If entity exists according to current define order.
-                bool entityExists = groupedEntityList.Keys
-                    .Contains(stateDefineOrder.Key);
-
-                if (!entityExists)
-                    continue;
-
-                // Get list of entities to define state.
-                List<object> definedEntityStore = new List<object>();
-                IEnumerable<object> entititiesToDefineStateOf = groupedEntityList[stateDefineOrder.Key].Entities;
-
-                // Order entities to define state of them accordingly.
-                entititiesToDefineStateOf = DefineStateDefineOrder(entititiesToDefineStateOf);
-
-                // Loop through entiteis and define state.
-                for (int i = 0; i < entititiesToDefineStateOf.Count(); i++)
+                foreach (TEntity entity in entityList)
                 {
-                    dynamic entity = entititiesToDefineStateOf.ElementAt(i);
+                    DefineState(entity);
+                }
+            }
+            else
+            {
+                // Calculate state define order.
+                var stateDefineOrderCollection = CalculateStateDefineOrder();
 
-                    DefineState(
-                        entity,
-                        definedEntityStore,
-                        false,
-                        true,
-                        false);
+                // Get all entities related to provided list
+                List<object> allEntities = new List<object>();
+                entityList.ForEach(m => GetAllEntities(m, allEntities));
+
+                // Group list of entities by type
+                var groupedEntityList = allEntities
+                    .GroupBy(m => m.GetType().Name)
+                    .Select(g => new
+                    {
+                        TypeName = g.Key,
+                        Entities = g.Select(m => m)
+                    })
+                    .ToDictionary(m => m.TypeName);
+
+                foreach (var stateDefineOrder in stateDefineOrderCollection)
+                {
+                    // If entity exists according to current define order.
+                    bool entityExists = groupedEntityList.Keys
+                        .Contains(stateDefineOrder.Key);
+
+                    if (!entityExists)
+                        continue;
+
+                    // Get list of entities to define state.                    
+                    IEnumerable<object> entititiesToDefineStateOf = groupedEntityList[stateDefineOrder.Key].Entities;
+
+                    // Order entities to define state of them accordingly.
+                    entititiesToDefineStateOf = DefineStateDefineOrder(entititiesToDefineStateOf);
+
+                    // Loop through entiteis and define state.
+                    for (int i = 0; i < entititiesToDefineStateOf.Count(); i++)
+                    {
+                        dynamic entity = entititiesToDefineStateOf.ElementAt(i);
+
+                        DefineState(entity);
+                    }
                 }
             }
 
             ManualGraphManager<TEntity> manualGraphManager =
                 new ManualGraphManager<TEntity>(Context);
+            manualGraphManager.EntityCollection = entityList;
             return manualGraphManager;
         }
 
