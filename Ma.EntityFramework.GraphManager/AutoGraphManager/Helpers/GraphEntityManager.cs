@@ -391,14 +391,15 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
 
                 if (parent != null)
                 {
-                    foreach (string keyName in relationshipDetail.FromDetails.Keys)
+                    for (int i = 0; i < relationshipDetail.FromDetails.Keys.Count; i++)
                     {
-                        // At one-to-one relationships priamry key
-                        // and foreign keys must match. So, parent
-                        // and entity must have same property with name of keyName.
+                        // Get matching from and to key names
+                        string fromKeyName = relationshipDetail.FromDetails.Keys[i];
+                        string toKeyName = relationshipDetail.ToDetails.Keys[i];
+
                         ReflectionExtensions.SetPropertyValue(parent,
-                            keyName,
-                            matchingEntity.GetPropertyValue(keyName));
+                            fromKeyName,
+                            matchingEntity.GetPropertyValue(toKeyName));
                     }
                 }
             }

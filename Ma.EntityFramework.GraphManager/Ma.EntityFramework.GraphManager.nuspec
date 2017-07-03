@@ -12,9 +12,7 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Automatically define state of and handle graph of EntityFramework models with ease.</description>
     <releaseNotes>
-      1. Changed algorithm to define state of child entities.
-      2. Added ability to define state of entities which have self reference correctly.
-      3. Other imporvements.
+      1. Considered one-to-one relationships which have different key names while synchronizing keys.
     </releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>EntityFramework Graph CodeFirst GraphManager POCO</tags>
