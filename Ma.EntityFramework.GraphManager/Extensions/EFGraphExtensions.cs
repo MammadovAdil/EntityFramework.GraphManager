@@ -28,139 +28,6 @@ namespace Ma.EntityFramework.GraphManager
         }
 
         /// <summary>
-        /// Define state of entity. If entity already exists in the source
-        /// set and values has not been altered set the state to Unchanged, 
-        /// else if values has been changed set the state of changed properties
-        /// to Modified, otherwise set the state of entity to Added.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// When context or entity is null.
-        /// </exception>
-        /// <typeparam name="TEntity">Type of entity.</typeparam>
-        /// <param name="context">Context to work on.</param>
-        /// <param name="entity">Entity to define state of.</param>
-        /// <param name="defineStateOfChildEntities">If set to true define state of
-        /// configured child entities. This rule also applied to child entities
-        /// of child entities and so on.</param>
-        /// <returns>IManualGraphManager associated with current context to work on further.</returns>
-        public static IManualGraphManager<TEntity> DefineState<TEntity>(
-            this DbContext context,
-            TEntity entity,
-            bool defineStateOfChildEntities)
-            where TEntity : class
-        {
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
-            if (entity == null)
-                throw new ArgumentNullException(nameof(entity));
-
-            ContextHelper contextHelper = new ContextHelper(context);
-            return contextHelper.DefineState(entity, defineStateOfChildEntities);
-        }
-
-        /// <summary>
-        /// Define state of entity. If entity already exists in the source
-        /// set and values has not been altered set the state to Unchanged, 
-        /// else if values has been changed set the state of changed properties
-        /// to Modified, otherwise set the state of entity to Added. Do it for
-        /// all child entities also.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// When context or entity is null.
-        /// </exception>
-        /// <typeparam name="TEntity">Type of entity.</typeparam>
-        /// <param name="context">Context to work on.</param>
-        /// <param name="entity">Entity to define state of.</param>
-        /// <returns>IManualGraphManager associated with current context to work on further.</returns>
-        public static IManualGraphManager<TEntity> DefineState<TEntity>(
-            this DbContext context,
-            TEntity entity)
-            where TEntity : class
-        {
-            return context.DefineState(entity, true);
-        }
-
-        /// <summary>
-        /// Define state of list of entities. If entity already exists in the source
-        /// set and values has not been altered set the state to Unchanged, 
-        /// else if values has been changed set the state of changed properties
-        /// to Modified, otherwise set the state of entity to Added.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// When context or entity is null.
-        /// </exception>
-        /// <typeparam name="TEntity">Type of entity.</typeparam>
-        /// <param name="context">Context to work on.</param>
-        /// <param name="entityList">List of entities to define state of.</param>
-        /// <param name="defineStateOfChildEntities">
-        /// If set to true define state of
-        /// configured child entities. This rule also applied to child entities
-        /// of child entities and so on.
-        /// </param>
-        /// <returns>IManualGraphManager associated with current context to work on further.</returns>
-        public static IManualGraphManager<TEntity> DefineState<TEntity>(
-            this DbContext context,
-            List<TEntity> entityList,
-            bool defineStateOfChildEntities)
-            where TEntity : class
-        {
-            if (context == null)
-                throw new ArgumentNullException(nameof(context));
-            if (entityList == null)
-                throw new ArgumentNullException(nameof(entityList));
-
-            ContextHelper contextHelper = new ContextHelper(context);
-            return contextHelper.DefineState(entityList, defineStateOfChildEntities);
-        }
-
-        /// <summary>
-        /// Define state of list of entities. If entity already exists in the source
-        /// set and values has not been altered set the state to Unchanged, 
-        /// else if values has been changed set the state of changed properties
-        /// to Modified, otherwise set the state of entity to Added. Do it for child
-        /// entities also.
-        /// </summary>
-        /// <exception cref="ArgumentNullException">
-        /// When context or entity is null.
-        /// </exception>
-        /// <typeparam name="TEntity">Type of entity.</typeparam>
-        /// <param name="context">Context to work on.</param>
-        /// <param name="entityList">List of entities to define state of.</param>
-        /// <returns>IManualGraphManager associated with current context to work on further.</returns>
-        public static IManualGraphManager<TEntity> DefineState<TEntity>(
-            this DbContext context,
-            List<TEntity> entityList)
-            where TEntity : class
-        {
-            return context.DefineState(entityList, true);
-        }
-
-        /// <summary>
-        /// Add entity to context.
-        /// </summary>
-        /// <typeparam name="TEntity">Type of entity.</typeparam>
-        /// <param name="context">Context to work on.</param>
-        /// <param name="entity">Entity to add to context.</param>
-        private static void Add<TEntity>(
-            this DbContext context,
-            TEntity entity)
-            where TEntity : class
-        {
-            if (entity == null)
-                throw new ArgumentNullException(nameof(entity));
-
-            // If entity is not detached detach it to add again with
-            // all navigation properties. Setting state to
-            // added as below:
-            // Context.Entry(entity).State = EntityState.Addded
-            // will not add navigation properties
-            if (context.Entry(entity).State != EntityState.Detached)
-                context.Entry(entity).State = EntityState.Detached;
-
-            context.Set<TEntity>().Add(entity);
-        }
-
-        /// <summary>
         /// Add or update entity. If entity already exists in the source
         /// set and values has not been altered set the state to Unchanged, 
         /// else if values has been changed set the state of changed properties
@@ -213,8 +80,8 @@ namespace Ma.EntityFramework.GraphManager
             if (entity == null)
                 throw new ArgumentNullException(nameof(entity));
 
-            context.Add(entity);
-            return context.DefineState(entity, defineStateOfChildEntities);
+            ContextHelper contextHelper = new ContextHelper(context);
+            return contextHelper.DefineState(entity, defineStateOfChildEntities);
         }
 
         /// <summary>
@@ -270,8 +137,8 @@ namespace Ma.EntityFramework.GraphManager
             if (entityList == null)
                 throw new ArgumentNullException(nameof(entityList));
 
-            entityList.ForEach(m => context.Add(m));
-            return context.DefineState(entityList, defineStateOfChildEntities);
+            ContextHelper contextHelper = new ContextHelper(context);
+            return contextHelper.DefineState(entityList, defineStateOfChildEntities);
         }
 
         /// <summary>
