@@ -779,6 +779,14 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             // in which state of entities must be defined.
             if (!defineStateOfChildEntities)
             {
+                // Before starting state define set state of all Detached entities to Added.
+                foreach (TEntity entity in entityList)
+                {
+                    if (Context.Entry(entity).State == EntityState.Detached)
+                        Context.Entry(entity).State = EntityState.Added;
+                }
+
+                // Define state of entities
                 foreach (TEntity entity in entityList)
                 {
                     DefineState(entity);
@@ -803,6 +811,14 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                     })
                     .ToDictionary(m => m.TypeName);
 
+                // Before starting state define set state of all Detached entities to Added.
+                foreach (object entity in allEntities)
+                {
+                    if (Context.Entry(entity).State == EntityState.Detached)
+                        Context.Entry(entity).State = EntityState.Added;
+                }
+
+                // Define sate of entities.
                 foreach (var stateDefineOrder in stateDefineOrderCollection)
                 {
                     // If entity exists according to current define order.
