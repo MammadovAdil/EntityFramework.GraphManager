@@ -53,6 +53,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Additions\ExtendedDbFunctions.cs" />
     <Compile Include="AutoGraphManager\AutoGraphManager.cs" />
     <Compile Include="AutoGraphManager\Helpers\Abstract\IContextFactory.cs" />
     <Compile Include="AutoGraphManager\Helpers\Abstract\IContextHelper.cs" />
