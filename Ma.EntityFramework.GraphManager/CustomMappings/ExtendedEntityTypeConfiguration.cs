@@ -40,7 +40,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
             if (propertyLambda == null)
                 throw new ArgumentNullException("propertyLambda");
 
-            List<PropertyInfo> markedProperties = propertyLambda.GetPropertyInfoList();
+            var markedProperties = propertyLambda.GetPropertyInfoList();
 
             if (markedProperties == null
                 || markedProperties.Count == 0)
@@ -50,7 +50,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                     typeof(TEntity).Name));
 
             // Selects properties which are not appropriate to set as unique
-            IEnumerable<PropertyInfo> violatedProperties = markedProperties
+            var violatedProperties = markedProperties
                 .Where(m => m.PropertyType.IsCollectionType()
                     || (!m.PropertyType.IsBuiltinType()
                         && (!m.PropertyType.IsEnum
@@ -65,14 +65,13 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                     propertyLambda.ToString(),
                     typeof(TEntity).Name));
 
-            PropertiesWithSource markedAsUnique = new PropertiesWithSource()
+            var markedAsUnique = new PropertiesWithSource()
             {
                 SourceType = typeof(TEntity),
                 Properties = markedProperties
             };
 
-            // Find duplicates
-            IEnumerable<PropertiesWithSource> duplicates = MappingStorage.Instance.UniqueProperties
+            var duplicates = MappingStorage.Instance.UniqueProperties
                 .Where(m => m.SourceType.Equals(markedAsUnique.SourceType)
                         && m.Properties
                             .Select(p => p.Name)
@@ -82,11 +81,8 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                                             .Select(p => p.Name)
                                             .OrderBy(p => p)));
 
-            if (duplicates.Count() > 0)
-                throw new ArgumentException(string.Format(
-                    "Expression '{0}' for '{1}' selects already selected properties to set as unique.",
-                    propertyLambda.ToString(),
-                    typeof(TEntity).Name));
+            if (duplicates.Any())
+                return;
 
             if (!MappingStorage.Instance.UniqueProperties.Contains(markedAsUnique))
                 MappingStorage.Instance.UniqueProperties.Add(markedAsUnique);
@@ -118,7 +114,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
             if (propertyLambda == null)
                 throw new ArgumentNullException("propertyLambda");
 
-            List<PropertyInfo> markedProperties = propertyLambda.GetPropertyInfoList();
+            var markedProperties = propertyLambda.GetPropertyInfoList();
 
             if (markedProperties == null
                 || markedProperties.Count == 0)
@@ -128,7 +124,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                     typeof(TEntity).Name));
 
             // Selects properties which are not appropriate to set as to define sate of
-            IEnumerable<PropertyInfo> violatedProperties = markedProperties
+            var violatedProperties = markedProperties
                 .Where(m => m.PropertyType.IsValueType
                     || (m.PropertyType.IsBuiltinType()
                         && m.PropertyType.IsCollectionType()
@@ -152,12 +148,10 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                     typeof(TEntity).Name));
 
 
-            // First look if configuration to define state of properties is set for this TSource
-            PropertiesWithSource markedToDefineStateOf = MappingStorage.Instance.StateDefiners
+            var markedToDefineStateOf = MappingStorage.Instance.StateDefiners
                 .Where(m => m.SourceType.Equals(typeof(TEntity)))
                 .FirstOrDefault();
 
-            // If not initialize it
             if (markedToDefineStateOf == null)
                 markedToDefineStateOf = new PropertiesWithSource()
                 {
@@ -165,14 +159,13 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
                 };
 
 
-            if (markedToDefineStateOf.Properties
+            var alreadyAdded = markedToDefineStateOf.Properties
                 .Any(m => markedProperties
                             .Select(p => p.Name)
-                            .Contains(m.Name)))
-                throw new ArgumentException(string.Format(
-                    "Expression '{0}' for '{1}' selects already selected properties to define state of.",
-                    propertyLambda.ToString(),
-                    typeof(TEntity).Name));
+                            .Contains(m.Name));
+
+            if (alreadyAdded)
+                return;
 
             markedToDefineStateOf.Properties.AddRange(markedProperties);
 
@@ -198,15 +191,14 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings
             if (propertyLambda == null)
                 throw new ArgumentNullException("propertyLambda");
 
-            PropertyInfo property = propertyLambda.GetPropertyInfo();
+            var property = propertyLambda.GetPropertyInfo();
 
             if (property == null)
                 throw new ArgumentException(string.Format(
                     "Expression '{0}' does not select any property",
                     propertyLambda.ToString()));
 
-            ExtendedPropertyHelper<TEntity> helper =
-                new ExtendedPropertyHelper<TEntity>(property);
+            var helper = new ExtendedPropertyHelper<TEntity>(property);
             return helper;
         }
     }

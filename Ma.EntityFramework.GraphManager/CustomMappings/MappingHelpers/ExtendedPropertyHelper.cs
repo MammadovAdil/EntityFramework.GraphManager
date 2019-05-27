@@ -20,10 +20,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings.MappingHelpers
 
         internal ExtendedPropertyHelper(PropertyInfo propertyParam)
         {
-            if (propertyParam == null)
-                throw new ArgumentNullException("propertyParam");
-
-            Property = propertyParam;
+            Property = propertyParam ?? throw new ArgumentNullException("propertyParam");
         }
 
         /// <summary>
@@ -46,27 +43,21 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings.MappingHelpers
                     Property.Name,
                     typeof(T).Name));
 
-            // First look if configuration for same source already exist
-            PropertiesWithSource markedNotToCompare =
+            var markedNotToCompare =
                 MappingStorage.Instance.PropertiesNotToCompare
                 .Where(m => m.SourceType.Equals(typeof(T)))
                 .FirstOrDefault();
 
-            // If not found initialize it
             if (markedNotToCompare == null)
                 markedNotToCompare = new PropertiesWithSource() { SourceType = typeof(T) };
 
-            // Find duplicates
-            if(markedNotToCompare.Properties
-                .Any(m => Property.Name.Equals(m.Name)))
-                throw new ArgumentException(string.Format(
-                    "Property '{0}' for '{1}' is already selected property to set as not to compare.",
-                    Property.Name,
-                    typeof(T).Name));
+            var alreadyAdded = markedNotToCompare.Properties
+                .Any(m => Property.Name.Equals(m.Name));
+            if (alreadyAdded)
+                return this;
 
             markedNotToCompare.Properties.Add(Property);
 
-            // If data with the same source does not exists in the storage add it
             if (!MappingStorage.Instance.PropertiesNotToCompare.Contains(markedNotToCompare))
                 MappingStorage.Instance.PropertiesNotToCompare.Add(markedNotToCompare);
 
@@ -85,7 +76,7 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings.MappingHelpers
         /// <returns>Current ExtendedPropertyHelper.</returns>
         public ExtendedPropertyHelper<T> NotUpdatable()
         {
-            Type sourceType = typeof(T);
+            var sourceType = typeof(T);
 
             if (!Property.PropertyType.GetUnderlyingType().IsBuiltinType())
                 throw new ArgumentException(string.Format(
@@ -94,27 +85,21 @@ namespace Ma.EntityFramework.GraphManager.CustomMappings.MappingHelpers
                     Property.Name,
                     typeof(T).Name));
 
-            // First look if configuration for same source already exist
-            PropertiesWithSource markedNotUpdatable =
+            var markedNotUpdatable =
                 MappingStorage.Instance.NotUpdatableProperties
                 .Where(m => m.SourceType.Equals(typeof(T)))
                 .FirstOrDefault();
 
-            // If not found initialize it
             if (markedNotUpdatable == null)
                 markedNotUpdatable = new PropertiesWithSource() { SourceType = typeof(T) };
 
-            // Find duplicates
-            if (markedNotUpdatable.Properties
-                .Any(m => Property.Name.Equals(m.Name)))
-                throw new ArgumentException(string.Format(
-                    "Property '{0}' for '{1}' is already selected property to set as not updatable.",
-                    Property.Name,
-                    typeof(T).Name));
+            var alreadyAdded = markedNotUpdatable.Properties
+                .Any(m => Property.Name.Equals(m.Name));
+            if (alreadyAdded)
+                return this;
 
             markedNotUpdatable.Properties.Add(Property);
-
-            // If data with the same source does not exists in the storage add it
+            
             if (!MappingStorage.Instance.NotUpdatableProperties.Contains(markedNotUpdatable))
                 MappingStorage.Instance.NotUpdatableProperties.Add(markedNotUpdatable);
 
