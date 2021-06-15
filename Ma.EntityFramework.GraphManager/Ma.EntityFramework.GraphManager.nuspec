@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Ma.EntityFramework.GraphManager</id>
-    <version>$version$</version>
+    <version>1.2.0</version>
     <title>$title$</title>
     <authors>MammadovAdil</authors>
     <owners>MammadovAdil</owners>
@@ -12,14 +12,21 @@
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Automatically define state of and handle graph of EntityFramework models with ease.</description>
     <releaseNotes>
-      1. Do not throw exception for trying to set up already setup properties.
+      1. Fix bug which finds origin of foreign keys to deal with duplicates. Bug was causing lose of some data from collections.
+      2. Include debug symbols.
     </releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>EntityFramework Graph CodeFirst GraphManager POCO</tags>
+    <repository type="git" url="https://github.com/MammadovAdil/EntityFramework.GraphManager" />
 
     <dependencies>
-      <dependency id="Ma.ExtensionMethods" version="1.0.0" />
-      <dependency id="EntityFramework" version="6.1.3" />
+      <group targetFramework=".NETFramework4.5">
+        <dependency id="Ma.ExtensionMethods" version="1.0.0" />
+        <dependency id="EntityFramework" version="6.1.3" />
+      </group>
     </dependencies>
   </metadata>
+  <files>
+    <file src="bin\$configuration$\$id$.pdb" target="lib\net45\" />
+  </files>
 </package>

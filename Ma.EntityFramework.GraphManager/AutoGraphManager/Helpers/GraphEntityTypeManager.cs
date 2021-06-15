@@ -192,7 +192,8 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
 
             if (parentType != null)
             {
-                string currentReferencedTypeName = parentType.FromDetails.ContainerClass;
+                var currentReferencedTypeName = parentType.FromDetails.ContainerClass;
+                var currentForeignKeyName = GetMatchingFromForeignKeyName(parentType, foreignKeyName);
                 while (!string.IsNullOrEmpty(currentReferencedTypeName))
                 {
                     // If EntityTypeName and currentReferencedTypeName is same,
@@ -208,7 +209,7 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                     RelationshipDetail principalParent = referencedTypeManager
                         .GetForeignKeyDetails()
                         .Where(r => r.ToDetails.ContainerClass.Equals(currentReferencedTypeName)
-                            && r.ToDetails.Keys.Contains(foreignKeyName)
+                            && r.ToDetails.Keys.Contains(currentForeignKeyName)
                             && r.FromDetails != null
                             && !string.IsNullOrEmpty(r.FromDetails.ContainerClass)
                             && principalRelationshipMultiplicity
@@ -216,11 +217,16 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
                         .FirstOrDefault();
 
                     if (principalParent != null)
+                    {
                         // If principal parent is not null set current to this.
                         currentReferencedTypeName = principalParent.FromDetails.ContainerClass;
+                        currentForeignKeyName = GetMatchingFromForeignKeyName(principalParent, currentForeignKeyName);
+                    }
                     else
+                    {
                         // If principal parent is null exit the iteration.
                         break;
+                    }
                 }
 
                 originOfForeignKey = currentReferencedTypeName;
@@ -316,6 +322,31 @@ namespace Ma.EntityFramework.GraphManager.AutoGraphManager.Helpers
             // Store calculation for further use.
             store.Add(EntityTypeName, count);
             return count;
+        }
+
+        /// <summary>
+        /// Get matching From ForeignKeyName according to To ForeignKeyName.
+        /// </summary>
+        /// <param name="parentType">Parent relationship detail.</param>
+        /// <param name="toForeignKeyName">To ForeignKeyName.</param>
+        /// <returns></returns>
+        private string GetMatchingFromForeignKeyName(RelationshipDetail parentType, string toForeignKeyName)
+        {
+            if (parentType == null || string.IsNullOrEmpty(toForeignKeyName))
+            {
+                return string.Empty;
+            }
+
+            for (int i = 0; i < parentType.ToDetails.Keys.Count; i++)
+            {
+                var foreignKeyAtIndex = parentType.ToDetails.Keys.ElementAt(i);                
+                if (string.Equals(foreignKeyAtIndex, toForeignKeyName, StringComparison.Ordinal))
+                {
+                    return parentType.FromDetails.Keys.ElementAt(i);
+                }
+            }
+
+            return string.Empty;
         }
     }
 }
